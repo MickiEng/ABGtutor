@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ABG Tutor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f8;
+      color: #222;
+    }
+
+    .app-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .subheading {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 24px;
+      line-height: 1.5;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .reset-container {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .reset-btn {
+      background-color: #fff;
+      border: 1px solid #d1d5db;
+      color: #374151;
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .reset-btn:hover {
+      background-color: #f3f4f6;
+      border-color: #9ca3af;
+    }
+
+    /* --- Cause Grid Styles --- */
+    .cause-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .cause-column {
+      flex: 1;
+      min-width: 260px;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    .cause-column-icon {
+      text-align: center;
+    }
+
+    .cause-column-icon span.icon {
+      font-size: 1.8rem;
+      display: block;
+    }
+
+    .cause-column-icon span.label {
+      font-size: 0.8rem;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* Top-right tags */
+    .imbalance-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: none; 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .tag-acid { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .tag-alk { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    .cause-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .cause-button {
+      font-size: 0.78rem;
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.2;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .acid-button { background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
+    .acid-button.active { background: #b91c1c; border-color: #7f1d1d; color: #ffffff; }
+
+    .alk-button { background: #dbeafe; border-color: #bfdbfe; color: #1d4ed8; }
+    .alk-button.active { background: #1d4ed8; border-color: #1e3a8a; color: #ffffff; }
+
+    .cause-note-local {
+      min-height: 20px;
+      font-size: 0.8rem;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .simple-change, .simple-substance { font-weight: 600; margin-right: 4px; }
+    .simple-acid { color: #b91c1c; }
+    .simple-alk { color: #1d4ed8; }
+
+    /* --- Slider & Row Layout --- */
+    .row {
+      display: flex;
+      align-items: center; 
+      gap: 12px;
+      margin-bottom: 40px; 
+      position: relative;
+    }
+
+    .row-label {
+      width: 125px; 
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px; 
+      margin-top: -10px;
+    }
+
+    .row-icon {
+      font-size: 1.4rem; 
+      line-height: 1;
+    }
+
+    .arrow-indicator {
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: inline-block;
+      width: 12px;
+      text-align: center;
+    }
+    .arrow-up { transform: translateY(-1px); }
+    .arrow-down { transform: translateY(1px); }
+    .arrow-acid { color: #ef4444; }
+    .arrow-alk { color: #3b82f6; }
+
+    .slider-interactive-container {
+      flex: 1;
+      position: relative;
+      height: 40px; 
+      display: flex;
+      align-items: center;
+      transition: opacity 0.2s;
+    }
+
+    /* LOCKED STATE STYLE */
+    .slider-interactive-container.locked {
+      pointer-events: none; 
+    }
+
+    /* --- Floating Bubble Styles --- */
+    .bubble {
+      position: absolute;
+      top: -28px; 
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      pointer-events: none;
+      white-space: nowrap;
+      transition: left 0.05s linear, background-color 0.2s;
+      z-index: 10;
+    }
+    .bubble::after {
+      content: "";
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid #222;
+      transition: border-top-color 0.2s;
+    }
+
+    /* LOCKED BUBBLE STYLE */
+    /* When a slider is locked, the bubble turns grey */
+    .bubble.locked-bubble {
+      background: #6b7280; /* Cool Grey */
+    }
+    .bubble.locked-bubble::after {
+      border-top-color: #6b7280;
+    }
+
+    /* --- Track & Thumb Styles --- */
+    .slider-track-bg {
+      position: absolute;
+      left: 0; 
+      right: 0;
+      height: 12px;
+      border-radius: 999px;
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none; 
+      appearance: none;
+      width: 100%;
+      height: 12px;
+      background: transparent;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+      z-index: 2;
+      cursor: pointer;
+    }
+    input[type="range"]:focus { outline: none; }
+    
+    input[type="range"]:disabled {
+      cursor: not-allowed;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #555;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      margin-top: 0px; 
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    input[type="range"]::-moz-range-thumb {
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #555;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    /* SPECIFIC STYLE FOR LOCKED THUMB */
+    .slider-interactive-container.locked input[type="range"]::-webkit-slider-thumb {
+      background: #d1d5db; /* Grey handle */
+      border-color: #9ca3af;
+    }
+    .slider-interactive-container.locked input[type="range"]::-moz-range-thumb {
+      background: #d1d5db;
+      border-color: #9ca3af;
+    }
+
+    /* --- Gradients --- */
+    .co2-gradient {
+      background: linear-gradient(to right, #3b82f6 0%, #93c5fd 28%, #22c55e 30%, #22c55e 50%, #fca5a5 52%, #ef4444 100%);
+    }
+    .hco3-gradient {
+      background: linear-gradient(to right, #ef4444 0%, #fca5a5 38%, #22c55e 40%, #22c55e 53.3%, #93c5fd 55.3%, #3b82f6 100%);
+    }
+    .ph-gradient {
+      background: linear-gradient(to right, #ef4444 0%, #fca5a5 36.5%, #22c55e 37.5%, #22c55e 62.5%, #93c5fd 63.5%, #3b82f6 100%);
+    }
+
+    /* --- Tick Markers --- */
+    .ticks-container {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 12px;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .tick-label {
+      position: absolute;
+      top: 18px;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #555;
+      font-weight: 600;
+    }
+    
+    .tick-mark {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255,255,255,0.4);
+    }
+
+    /* --- pH Specifics --- */
+    .ph-bar-container {
+      flex: 1;
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .ph-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+      height: 20px;
+      background: #000;
+      border: 1px solid #fff;
+      border-radius: 2px;
+      z-index: 3;
+      transition: left 0.15s ease-out;
+    }
+    
+    .ph-bubble {
+      position: absolute;
+      top: -28px;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      z-index: 10;
+      transition: left 0.15s ease-out;
+    }
+    .ph-bubble::after {
+      content: "";
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid #222;
+    }
+
+    /* --- Result Box --- */
+    .result-box {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      text-align: center;
+    }
+    
+    .result-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #4b5563;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .result-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #111;
+    }
+
+    @media (max-width: 600px) {
+      .cause-buttons-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .row { margin-bottom: 45px; } 
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>ABG Tutor</h1>
+    <div class="subheading">
+      For educational purposes only. Not a clinical tool.
+    </div>
+
+    <div class="reset-container">
+      <button class="reset-btn" onclick="resetApp()">↺ Reset</button>
+    </div>
+
+    <div class="cause-grid">
+      <div class="cause-column">
+        <span id="respImbalanceTag" class="imbalance-tag"></span>
+        <div class="cause-column-icon"><span class="icon">🫁</span><span class="label">Respiratory</span></div>
+        <div class="cause-buttons-grid">
+          <button class="cause-button acid-button" data-cause="copd" onclick="selectCause('copd')">COPD</button>
+          <button class="cause-button acid-button" data-cause="pulm_edema" onclick="selectCause('pulm_edema')">Pulmonary edema</button>
+          <button class="cause-button acid-button" data-cause="hypovent" onclick="selectCause('hypovent')">Hypoventilation</button>
+          <button class="cause-button alk-button" data-cause="anxiety" onclick="selectCause('anxiety')">Anxiety</button>
+          <button class="cause-button alk-button" data-cause="fever" onclick="selectCause('fever')">Fever</button>
+          <button class="cause-button alk-button" data-cause="hypervent" onclick="selectCause('hypervent')">Hyperventilation</button>
+        </div>
+        <div class="cause-note-local" id="respCauseNote"></div>
+      </div>
+
+      <div class="cause-column">
+        <span id="metImbalanceTag" class="imbalance-tag"></span>
+        <div class="cause-column-icon"><span class="icon">🧪</span><span class="label">Metabolic</span></div>
+        <div class="cause-buttons-grid">
+          <button class="cause-button acid-button" data-cause="dka" onclick="selectCause('dka')">DKA</button>
+          <button class="cause-button acid-button" data-cause="diarrhea" onclick="selectCause('diarrhea')">Diarrhea</button>
+          <button class="cause-button acid-button" data-cause="renal_failure" onclick="selectCause('renal_failure')">Renal failure</button>
+          <button class="cause-button alk-button" data-cause="vomiting" onclick="selectCause('vomiting')">Vomiting / NG</button>
+          <button class="cause-button alk-button" data-cause="diuretics" onclick="selectCause('diuretics')">Diuretics</button>
+          <button class="cause-button alk-button" data-cause="antacids" onclick="selectCause('antacids')">Antacids</button>
+        </div>
+        <div class="cause-note-local" id="metCauseNote"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">
+        <span class="row-icon">🫁</span>
+        PaCO₂
+        <span id="paco2Arrow" class="arrow-indicator"></span>
+      </div>
+      <div id="paco2Container" class="slider-interactive-container">
+        <div id="paco2Bubble" class="bubble">40</div>
+        <div class="slider-track-bg co2-gradient"></div>
+        <div class="ticks-container">
+           <div class="tick-mark" style="left: 30%"></div>
+           <div class="tick-label" style="left: 30%">35</div>
+           <div class="tick-mark" style="left: 50%"></div>
+           <div class="tick-label" style="left: 50%">45</div>
+        </div>
+        <input id="paco2Slider" type="range" min="20" max="70" step="1" value="40" oninput="onPaCO2Input(this.value)">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">
+        <span class="row-icon">🧪</span>
+        HCO₃⁻
+        <span id="hco3Arrow" class="arrow-indicator"></span>
+      </div>
+      <div id="hco3Container" class="slider-interactive-container">
+        <div id="hco3Bubble" class="bubble">24</div>
+        <div class="slider-track-bg hco3-gradient"></div>
+        <div class="ticks-container">
+           <div class="tick-mark" style="left: 40%"></div>
+           <div class="tick-label" style="left: 40%">22</div>
+           <div class="tick-mark" style="left: 53.33%"></div>
+           <div class="tick-label" style="left: 53.33%">26</div>
+        </div>
+        <input id="hco3Slider" type="range" min="10" max="40" step="1" value="24" oninput="onHCO3Input(this.value)">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="row-label">
+        <span class="row-icon">⚖️</span>
+        pH
+        <span id="phArrow" class="arrow-indicator"></span>
+      </div>
+      <div class="ph-bar-container">
+        <div class="slider-track-bg ph-gradient"></div>
+        <div class="ticks-container">
+           <div class="tick-mark" style="left: 37.5%"></div>
+           <div class="tick-label" style="left: 37.5%">7.35</div>
+           <div class="tick-mark" style="left: 62.5%"></div>
+           <div class="tick-label" style="left: 62.5%">7.45</div>
+        </div>
+        <div id="phMarker" class="ph-marker" style="left: 50%"></div>
+        <div id="phBubble" class="ph-bubble" style="left: 50%">7.40</div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <span class="result-label">Interpretation</span>
+      <div id="resultText" class="result-text">Normal ABG</div>
+    </div>
+
+  </div>
+
+  <script>
+    const NORMAL_PACO2_MIN = 35;
+    const NORMAL_PACO2_MAX = 45;
+    const NORMAL_HCO3_MIN = 22;
+    const NORMAL_HCO3_MAX = 26;
+    const NORMAL_PH_MIN = 7.35;
+    const NORMAL_PH_MAX = 7.45;
+    
+    const NORMAL_PACO2_CENTER = 40;
+    const NORMAL_HCO3_CENTER = 24;
+
+    let paCO2 = NORMAL_PACO2_CENTER;
+    let hco3 = NORMAL_HCO3_CENTER;
+    let currentCause = null;
+
+    const paco2Slider = document.getElementById('paco2Slider');
+    const paco2Container = document.getElementById('paco2Container');
+    const paco2Bubble = document.getElementById('paco2Bubble');
+    
+    const hco3Slider = document.getElementById('hco3Slider');
+    const hco3Container = document.getElementById('hco3Container');
+    const hco3Bubble = document.getElementById('hco3Bubble');
+
+    const phMarker = document.getElementById('phMarker');
+    const phBubble = document.getElementById('phBubble');
+
+    const paco2Arrow = document.getElementById('paco2Arrow');
+    const hco3Arrow = document.getElementById('hco3Arrow');
+    const phArrow = document.getElementById('phArrow');
+
+    const causeButtons = document.querySelectorAll('.cause-button');
+    const respCauseNote = document.getElementById('respCauseNote');
+    const metCauseNote = document.getElementById('metCauseNote');
+
+    const respImbalanceTag = document.getElementById('respImbalanceTag');
+    const metImbalanceTag = document.getElementById('metImbalanceTag');
+    const resultText = document.getElementById('resultText');
+
+    const causeConfig = {
+      // Respiratory acidosis
+      copd: { primary: 'resp', imbalance: 'acid', paCO2: 60, hco3: NORMAL_HCO3_CENTER, changeType: 'gain', substance: 'CO₂' },
+      pulm_edema: { primary: 'resp', imbalance: 'acid', paCO2: 55, hco3: NORMAL_HCO3_CENTER, changeType: 'gain', substance: 'CO₂' },
+      hypovent: { primary: 'resp', imbalance: 'acid', paCO2: 50, hco3: NORMAL_HCO3_CENTER, changeType: 'gain', substance: 'CO₂' },
+      // Respiratory alkalosis
+      anxiety: { primary: 'resp', imbalance: 'alk', paCO2: 30, hco3: NORMAL_HCO3_CENTER, changeType: 'loss', substance: 'CO₂' },
+      fever: { primary: 'resp', imbalance: 'alk', paCO2: 32, hco3: NORMAL_HCO3_CENTER, changeType: 'loss', substance: 'CO₂' },
+      hypervent: { primary: 'resp', imbalance: 'alk', paCO2: 25, hco3: NORMAL_HCO3_CENTER, changeType: 'loss', substance: 'CO₂' },
+      // Metabolic acidosis
+      dka: { primary: 'met', imbalance: 'acid', paCO2: NORMAL_PACO2_CENTER, hco3: 12, changeType: 'gain', substance: 'acid (ketones)' },
+      diarrhea: { primary: 'met', imbalance: 'acid', paCO2: NORMAL_PACO2_CENTER, hco3: 18, changeType: 'loss', substance: 'HCO₃⁻' },
+      renal_failure: { primary: 'met', imbalance: 'acid', paCO2: NORMAL_PACO2_CENTER, hco3: 16, changeType: 'gain', substance: 'acid (H⁺)' },
+      // Metabolic alkalosis
+      vomiting: { primary: 'met', imbalance: 'alk', paCO2: NORMAL_PACO2_CENTER, hco3: 34, changeType: 'loss', substance: 'acid (HCl)' },
+      diuretics: { primary: 'met', imbalance: 'alk', paCO2: NORMAL_PACO2_CENTER, hco3: 32, changeType: 'loss', substance: 'Cl⁻ / fluid' },
+      antacids: { primary: 'met', imbalance: 'alk', paCO2: NORMAL_PACO2_CENTER, hco3: 30, changeType: 'gain', substance: 'base (alkali)' }
+    };
+
+    function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
+
+    function lockCompensationSlider(val, type) {
+      if (!currentCause) return val;
+      const cfg = causeConfig[currentCause];
+
+      // If PaCO2 is the input being moved (compensation for Met)
+      if (type === 'paco2' && cfg.primary === 'met') {
+        const perfectCompLimit = hco3 / 0.6; 
+        
+        if (cfg.imbalance === 'acid') {
+           // Met Acid (DKA) -> CO2 drops.
+           let limit = Math.max(perfectCompLimit, 10);
+           return clamp(val, limit, 45);
+        } else {
+           // Met Alk (Vomit) -> CO2 rises.
+           let limit = Math.min(perfectCompLimit, 100);
+           return clamp(val, 35, limit);
+        }
+      }
+
+      // If HCO3 is the input being moved (compensation for Resp)
+      if (type === 'hco3' && cfg.primary === 'resp') {
+        const perfectCompLimit = paCO2 * 0.6;
+
+        if (cfg.imbalance === 'acid') {
+           // Resp Acid (COPD) -> HCO3 rises.
+           let limit = Math.min(perfectCompLimit, 60);
+           return clamp(val, 22, limit);
+        } else {
+           // Resp Alk (Anxiety) -> HCO3 drops.
+           let limit = Math.max(perfectCompLimit, 5);
+           return clamp(val, limit, 26);
+        }
+      }
+
+      return val;
+    }
+
+    function setBubblePos(slider, bubble, val, min, max) {
+      const percent = ((val - min) * 100) / (max - min);
+      const newLeft = `calc(${percent}% + (${8 - percent * 0.15}px))`;
+      bubble.style.left = newLeft;
+      
+      // Check if locked
+      const isLocked = slider.parentElement.classList.contains('locked');
+      const prefix = isLocked ? "🔒 " : "";
+      bubble.textContent = prefix + Math.round(val);
+    }
+
+    function onPaCO2Input(value) {
+      let v = Number(value);
+      v = clamp(v, 20, 70);
+      
+      if (currentCause && causeConfig[currentCause].primary === 'met') {
+        v = lockCompensationSlider(v, 'paco2');
+      }
+
+      paCO2 = v;
+      paco2Slider.value = v;
+      setBubblePos(paco2Slider, paco2Bubble, v, 20, 70);
+      
+      updateAll();
+    }
+
+    function onHCO3Input(value) {
+      let v = Number(value);
+      v = clamp(v, 10, 40);
+
+      if (currentCause && causeConfig[currentCause].primary === 'resp') {
+        v = lockCompensationSlider(v, 'hco3');
+      }
+
+      hco3 = v;
+      hco3Slider.value = v;
+      setBubblePos(hco3Slider, hco3Bubble, v, 10, 40);
+
+      updateAll();
+    }
+
+    function clearPresetState() {
+      currentCause = null;
+      clearCauseActiveStates();
+      updateTags(null);
+      respCauseNote.innerHTML = '';
+      metCauseNote.innerHTML = '';
+      
+      // Unlock all
+      paco2Slider.disabled = false;
+      paco2Container.classList.remove('locked');
+      paco2Bubble.classList.remove('locked-bubble');
+
+      hco3Slider.disabled = false;
+      hco3Container.classList.remove('locked');
+      hco3Bubble.classList.remove('locked-bubble');
+    }
+
+    function computePH(hco3Val, paco2Val) {
+      const denom = 0.03 * paco2Val;
+      if (denom <= 0 || hco3Val <= 0) return 7.40;
+      const ratio = hco3Val / denom;
+      return 6.1 + Math.log10(ratio);
+    }
+
+    function updatePHDisplay(ph) {
+      const phRounded = ph.toFixed(2);
+      phBubble.textContent = phRounded;
+
+      const minPH = 7.20;
+      const maxPH = 7.60;
+      let clampedPH = ph;
+      if (clampedPH < minPH) clampedPH = minPH;
+      if (clampedPH > maxPH) clampedPH = maxPH;
+      
+      const percent = ((clampedPH - minPH) / (maxPH - minPH)) * 100;
+      phMarker.style.left = percent + '%';
+      phBubble.style.left = percent + '%';
+    }
+
+    function updateArrows(ph) {
+      paco2Arrow.textContent = ''; paco2Arrow.className = 'arrow-indicator';
+      hco3Arrow.textContent = ''; hco3Arrow.className = 'arrow-indicator';
+      phArrow.textContent = ''; phArrow.className = 'arrow-indicator';
+
+      if (paCO2 > NORMAL_PACO2_MAX) {
+        paco2Arrow.textContent = '↑'; paco2Arrow.classList.add('arrow-up', 'arrow-acid');
+      } else if (paCO2 < NORMAL_PACO2_MIN) {
+        paco2Arrow.textContent = '↓'; paco2Arrow.classList.add('arrow-down', 'arrow-alk');
+      }
+
+      if (hco3 > NORMAL_HCO3_MAX) {
+        hco3Arrow.textContent = '↑'; hco3Arrow.classList.add('arrow-up', 'arrow-alk');
+      } else if (hco3 < NORMAL_HCO3_MIN) {
+        hco3Arrow.textContent = '↓'; hco3Arrow.classList.add('arrow-down', 'arrow-acid');
+      }
+
+      if (ph > NORMAL_PH_MAX) {
+        phArrow.textContent = '↑'; phArrow.classList.add('arrow-up', 'arrow-alk');
+      } else if (ph < NORMAL_PH_MIN) {
+        phArrow.textContent = '↓'; phArrow.classList.add('arrow-down', 'arrow-acid');
+      }
+    }
+
+    function determineDiagnosis(ph) {
+      let phDir = 'normal';
+      if (ph < 7.35) phDir = 'acid';
+      if (ph > 7.45) phDir = 'alk';
+
+      let respDir = 'normal';
+      if (paCO2 > 45) respDir = 'acid';
+      if (paCO2 < 35) respDir = 'alk';
+
+      let metDir = 'normal';
+      if (hco3 < 22) metDir = 'acid';
+      if (hco3 > 26) metDir = 'alk';
+
+      if (phDir === 'normal' && respDir === 'normal' && metDir === 'normal') {
+        return "Normal ABG";
+      }
+
+      if (phDir === 'normal' && (respDir !== 'normal' || metDir !== 'normal')) {
+        let lean = (ph < 7.40) ? 'acid' : 'alk';
+
+        // Context Aware Override
+        if (currentCause) {
+           const cfg = causeConfig[currentCause];
+           if (cfg.imbalance === 'acid') lean = 'acid';
+           else lean = 'alk';
+        }
+
+        if (lean === 'acid' && respDir === 'acid') return "Fully Compensated Respiratory Acidosis";
+        if (lean === 'acid' && metDir === 'acid')  return "Fully Compensated Metabolic Acidosis";
+        if (lean === 'alk' && respDir === 'alk')   return "Fully Compensated Respiratory Alkalosis";
+        if (lean === 'alk' && metDir === 'alk')    return "Fully Compensated Metabolic Alkalosis";
+        return "Compensated ABG";
+      }
+
+      if (respDir === phDir && metDir === phDir) {
+        return phDir === 'acid' ? "Mixed Acidosis" : "Mixed Alkalosis";
+      }
+
+      if (respDir === phDir) {
+        let compText = (metDir !== 'normal' && metDir !== phDir) ? "Partially Compensated" : "Uncompensated";
+        return compText + " Respiratory " + (phDir === 'acid' ? "Acidosis" : "Alkalosis");
+      }
+      if (metDir === phDir) {
+        let compText = (respDir !== 'normal' && respDir !== phDir) ? "Partially Compensated" : "Uncompensated";
+        return compText + " Metabolic " + (phDir === 'acid' ? "Acidosis" : "Alkalosis");
+      }
+
+      return "Complex/Indeterminate Pattern";
+    }
+
+    function updateTags(cfg) {
+      respImbalanceTag.style.display = 'none';
+      respImbalanceTag.className = 'imbalance-tag'; 
+      metImbalanceTag.style.display = 'none';
+      metImbalanceTag.className = 'imbalance-tag';
+
+      if (!cfg) return; 
+
+      const labelText = cfg.imbalance === 'acid' ? 'ACIDOSIS' : 'ALKALOSIS';
+      const colorClass = cfg.imbalance === 'acid' ? 'tag-acid' : 'tag-alk';
+
+      if (cfg.primary === 'resp') {
+        respImbalanceTag.textContent = labelText;
+        respImbalanceTag.classList.add(colorClass);
+        respImbalanceTag.style.display = 'block';
+      } else {
+        metImbalanceTag.textContent = labelText;
+        metImbalanceTag.classList.add(colorClass);
+        metImbalanceTag.style.display = 'block';
+      }
+    }
+
+    function updateAll() {
+      const ph = computePH(hco3, paCO2);
+      updatePHDisplay(ph);
+      updateArrows(ph);
+      resultText.textContent = determineDiagnosis(ph);
+    }
+
+    function clearCauseActiveStates() {
+      causeButtons.forEach(btn => btn.classList.remove('active'));
+    }
+
+    function selectCause(key) {
+      const cfg = causeConfig[key];
+      if (!cfg) return;
+      currentCause = key;
+
+      clearCauseActiveStates();
+      const btn = document.querySelector('.cause-button[data-cause="' + key + '"]');
+      if (btn) btn.classList.add('active');
+
+      // Reset
+      paco2Slider.disabled = false;
+      paco2Container.classList.remove('locked');
+      paco2Bubble.classList.remove('locked-bubble');
+
+      hco3Slider.disabled = false;
+      hco3Container.classList.remove('locked');
+      hco3Bubble.classList.remove('locked-bubble');
+
+      paCO2 = cfg.paCO2;
+      hco3 = cfg.hco3;
+
+      // Lock Logic
+      if (cfg.primary === 'resp') {
+         paco2Slider.disabled = true;
+         paco2Container.classList.add('locked');
+         paco2Bubble.classList.add('locked-bubble');
+         hco3 = lockCompensationSlider(hco3, 'hco3');
+      } else {
+         hco3Slider.disabled = true;
+         hco3Container.classList.add('locked');
+         hco3Bubble.classList.add('locked-bubble');
+         paCO2 = lockCompensationSlider(paCO2, 'paco2');
+      }
+
+      paco2Slider.value = paCO2;
+      setBubblePos(paco2Slider, paco2Bubble, paCO2, 20, 70);
+
+      hco3Slider.value = hco3;
+      setBubblePos(hco3Slider, hco3Bubble, hco3, 10, 40);
+
+      const isAcid = btn && btn.classList.contains('acid-button');
+      const colorClass = isAcid ? 'simple-acid' : 'simple-alk';
+      const signText = cfg.changeType === 'gain' ? '+GAIN' : '-LOSS';
+      const html = `<span class="simple-change ${colorClass}">${signText}</span><span class="simple-substance ${colorClass}">${cfg.substance}</span>`;
+
+      respCauseNote.innerHTML = ''; metCauseNote.innerHTML = '';
+      if (cfg.primary === 'resp') {
+        respCauseNote.innerHTML = html;
+      } else {
+        metCauseNote.innerHTML = html;
+      }
+
+      updateTags(cfg);
+      updateAll();
+    }
+
+    function resetApp() {
+      clearPresetState();
+      init();
+    }
+
+    function init() {
+      currentCause = null;
+      paCO2 = NORMAL_PACO2_CENTER;
+      hco3 = NORMAL_HCO3_CENTER;
+      
+      paco2Slider.value = paCO2;
+      setBubblePos(paco2Slider, paco2Bubble, paCO2, 20, 70);
+      
+      hco3Slider.value = hco3;
+      setBubblePos(hco3Slider, hco3Bubble, hco3, 10, 40);
+
+      respCauseNote.textContent = '';
+      metCauseNote.textContent = '';
+      
+      updateTags(null);
+      updateAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
