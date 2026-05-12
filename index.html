@@ -20,6 +20,7 @@
       border-radius: 12px;
       padding: 24px 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: relative;
     }
 
     h1 {
@@ -415,6 +416,23 @@
       .cause-buttons-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .row { margin-bottom: 45px; } 
     }
+
+    .widget-logo {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      max-height: 45px;
+      width: auto;
+      z-index: 100;
+    }
+    @media screen and (max-width: 600px) {
+      .widget-logo {
+        position: static !important;
+        display: block !important;
+        margin: 20px auto 10px auto !important;
+        max-height: 35px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -520,6 +538,7 @@
       <div id="resultText" class="result-text">Normal ABG</div>
     </div>
 
+    <img src="beal_logo_blue_sm.webp" alt="Beal University Logo" class="widget-logo">
   </div>
 
   <script>
